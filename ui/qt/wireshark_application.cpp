@@ -57,6 +57,9 @@
 #include "log.h"
 #include "recent_file_status.h"
 
+#ifdef HAVE_EXTCAP
+#include "extcap.h"
+#endif
 #ifdef HAVE_LIBPCAP
 #include <caputils/iface_monitor.h>
 #endif
@@ -669,6 +672,7 @@ void WiresharkApplication::cleanup()
 
     qDeleteAll(recent_captures_);
     recent_captures_.clear();
+    free_filter_lists();
 }
 
 void WiresharkApplication::itemStatusFinished(const QString filename, qint64 size, bool accessible) {
@@ -844,7 +848,7 @@ WiresharkApplication::WiresharkApplication(int &argc,  char **argv) :
 
 WiresharkApplication::~WiresharkApplication()
 {
-    free_filter_lists();
+    this->cleanup();
 }
 
 void WiresharkApplication::registerUpdate(register_action_e action, const char *message)
@@ -1057,6 +1061,10 @@ void WiresharkApplication::ifChangeEventsAvailable()
 
 void WiresharkApplication::refreshLocalInterfaces()
 {
+#ifdef HAVE_EXTCAP
+    extcap_clear_interfaces();
+#endif
+
 #ifdef HAVE_LIBPCAP
     /*
      * Reload the local interface list.
